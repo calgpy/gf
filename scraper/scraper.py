@@ -27,9 +27,11 @@ def scrape_match():
             
             matches_found = []
             
-            # Buscamos todos los links que contengan "vs" o estructura de fecha
-            # Ajustamos el selector para ser mas abarcativo o especifico segun la pagina
-            # Tomamos todos los <a> que tengan href
+            # Fecha de hoy para filtrar (ej: 2026/01/28)
+            today_path = datetime.now().strftime("%Y/%m/%d")
+            print(f"Filtrando por fecha: {today_path}")
+            
+            # Buscamos enlaces que contengan la fecha y sean .html
             candidates = page.locator("a[href*='html']").all()
 
             unique_links = set()
@@ -38,18 +40,32 @@ def scrape_match():
                 href = link.get_attribute("href")
                 text = link.inner_text().strip()
                 
+                # Filtrar estrictamente por la ruta de fecha de hoy
+                if href and today_path not in href:
+                    continue
+
                 # Intentar sacar titulo de la imagen si no hay texto
                 if not text:
                     img = link.locator("img").first
                     if img.count() > 0:
                         text = img.get_attribute("alt")
                 
-                # Ultimo recurso: sacar del URL
-                if not text and href:
-                    # Ejemplo: .../2024/01/cerro-porteno-vs-trinidense.html
+                # Limpiar titulo desde el URL slug
+                if href:
+                    # Ejemplo: https://www.goatfutbol.online/2026/01/2000-2-de-mayo-vs-olimpia-en-vivo.html
                     parts = href.split("/")
-                    last_part = parts[-1].replace(".html", "").replace(".php", "")
-                    text = last_part.replace("-", " ").title()
+                    slug = parts[-1].replace(".html", "").replace(".php", "")
+                    
+                    # Remover prefijos de hora (ej: 2000-)
+                    slug = re.sub(r'^\d+-', '', slug)
+                    # Remover sufijos comunes (ej: -en-vivo)
+                    slug = slug.replace("-en-vivo", "")
+                    # Limpiar guiones
+                    clean_title = slug.replace("-", " ").strip().title()
+                    
+                    # Si el texto extraido es pobre (ej: "0"), usar el slug limpio
+                    if not text or len(text) < 3 or text == "0":
+                        text = clean_title
 
                 if href and "goatfutbol.online" in href and ("vs" in href.lower() or "vs" in str(text).lower() or "partido" in str(text).lower()):
                     if href not in unique_links:
