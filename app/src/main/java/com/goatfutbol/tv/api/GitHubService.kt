@@ -33,5 +33,11 @@ data class MatchData(
     val title: String,
     val url: String,
     val date: String,
-    val error: String?
+    val error: String?,
+    val matches: List<MatchItem>? = null
+)
+
+data class MatchItem(
+    val title: String,
+    val url: String
 )

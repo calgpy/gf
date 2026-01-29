@@ -1,4 +1,4 @@
-depackage com.goatfutbol.tv
+package com.goatfutbol.tv
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -29,7 +29,7 @@ import com.goatfutbol.tv.R
 class MainActivity : AppCompatActivity() {
 
     // CONFIGURACION (LLENAR ESTO)
-    private val GITHUB_TOKEN = "Bearer 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" 
+    private val GITHUB_TOKEN = "Bearer TOKEN_REMOVED_FOR_SECURITY" 
     private val OWNER = "calgpy"
     private val REPO = "gf"
     private val WORKFLOW_ID = "scrape.yml"
@@ -94,19 +94,17 @@ class MainActivity : AppCompatActivity() {
         tvLogOverlay = findViewById(R.id.tvLogOverlay)
         btnCopyLog = findViewById(R.id.btnCopyLog)
 
+        Logger.setListener { newLogs ->
+            tvLogOverlay.text = Logger.getLogs()
+        }
+
         setupCrashHandler()
-        log("App Iniciada correctamente.")
+        Logger.log("App Iniciada correctamente.")
 
         loadMatchData()
 
         btnWatch.setOnClickListener {
-            if (lastUrl.isNotEmpty()) {
-                val intent = Intent(this, WebViewActivity::class.java)
-                intent.putExtra("EXTRA_URL", lastUrl)
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "No hay URL disponible", Toast.LENGTH_SHORT).show()
-            }
+            showMatchSelector()
         }
 
         // SECRET TRIGGER (Debounced)
@@ -128,17 +126,57 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var currentMatches: List<com.goatfutbol.tv.api.MatchItem>? = null
+
     private fun loadMatchData() {
         repository.getMatch(GITHUB_TOKEN) { result ->
             result.onSuccess { match ->
-                tvMatchTitle.text = match.title
-                lastUrl = match.url
-                log("Datos cargados: ${match.title}")
+                if (!match.matches.isNullOrEmpty()) {
+                    currentMatches = match.matches
+                    tvMatchTitle.text = "${match.matches.size} Partidos Disponibles"
+                    lastUrl = match.matches[0].url // Default to first
+                    Logger.log("Cargados ${match.matches.size} partidos:")
+                    match.matches.forEach { 
+                        Logger.log("  - ${it.title} -> ${it.url}")
+                    }
+                } else {
+                    tvMatchTitle.text = match.title
+                    lastUrl = match.url
+                    currentMatches = null
+                    Logger.log("Datos cargados: ${match.title} -> ${match.url}")
+                }
             }.onFailure { e ->
                 tvMatchTitle.text = "Error cargando datos"
-                log("Error Repo: ${e.message}")
+                Logger.log("Error Repo: ${e.message}")
             }
         }
+    }
+
+    private fun showMatchSelector() {
+        if (currentMatches.isNullOrEmpty()) {
+            if (lastUrl.isNotEmpty()) {
+                openPlayer(lastUrl)
+            } else {
+                Toast.makeText(this, "No hay URL disponible", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
+        val titles = currentMatches!!.map { it.title }.toTypedArray()
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Selecciona un Partido")
+            .setItems(titles) { _, which ->
+                val selectedMatch = currentMatches!![which]
+                Logger.log("Seleccionado: ${selectedMatch.title} -> ${selectedMatch.url}")
+                openPlayer(selectedMatch.url)
+            }
+            .show()
+    }
+
+    private fun openPlayer(url: String) {
+        val intent = Intent(this, WebViewActivity::class.java)
+        intent.putExtra("EXTRA_URL", url)
+        startActivity(intent)
     }
 
     private fun triggerWorkflow() {
@@ -196,11 +234,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun log(message: String) {
-        runOnUiThread {
-            val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            val newLog = "[$timestamp] $message\n${tvLogOverlay.text}"
-            tvLogOverlay.text = newLog
-        }
+        Logger.log(message)
     }
 
     private fun copyLogToClipboard() {

@@ -46,6 +46,7 @@
         <activity
             android:name="com.goatfutbol.tv.WebViewActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <provider
