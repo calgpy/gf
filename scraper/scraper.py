@@ -22,60 +22,60 @@ def scrape_match():
             page.goto("https://www.goatfutbol.online/", timeout=60000)
             page.wait_for_load_state("networkidle")
 
-            # 2. Buscar todos los enlaces de partidos
+            # 2. Buscar todos los contenedores de posts
             print("Buscando partidos...")
             
             matches_found = []
             
-            # Fecha de hoy para filtrar (ej: 2026/01/28)
-            today_path = datetime.now().strftime("%Y/%m/%d")
-            print(f"Filtrando por fecha: {today_path}")
+            # Mapeo de meses en español
+            meses = {
+                1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+                5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+                9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
+            }
             
-            # Buscamos enlaces que contengan la fecha y sean .html
-            candidates = page.locator("a[href*='html']").all()
+            now = datetime.now()
+            today_str = f"{meses[now.month]} {now.day}, {now.year}"
+            print(f"Filtrando por fecha: {today_str}")
+            
+            # Buscamos los contenedores de cada post
+            posts = page.locator("div.post.hentry").all()
+            print(f"Post contenedores encontrados: {len(posts)}")
 
             unique_links = set()
             
-            for link in candidates:
-                href = link.get_attribute("href")
-                text = link.inner_text().strip()
+            for post in posts:
+                # Extraer fecha del post
+                date_elem = post.locator(".date-header-post abbr.published").first
+                post_date = date_elem.inner_text().strip().lower() if date_elem.count() > 0 else ""
                 
-                # Filtrar estrictamente por la ruta de fecha de hoy
-                if href and today_path not in href:
+                if today_str.lower() not in post_date:
                     continue
-
-                # Intentar sacar titulo de la imagen si no hay texto
-                if not text:
-                    img = link.locator("img").first
-                    if img.count() > 0:
-                        text = img.get_attribute("alt")
                 
-                # Limpiar titulo desde el URL slug
+                # Extraer link y titulo
+                link_elem = post.locator("h2.post-title a").first
+                if link_elem.count() == 0:
+                    continue
+                    
+                href = link_elem.get_attribute("href")
+                text = link_elem.inner_text().strip()
+                
+                # Si el texto es pobre, limpiar del slug
                 if href:
-                    # Ejemplo: https://www.goatfutbol.online/2026/01/2000-2-de-mayo-vs-olimpia-en-vivo.html
                     parts = href.split("/")
                     slug = parts[-1].replace(".html", "").replace(".php", "")
-                    
-                    # Remover prefijos de hora (ej: 2000-)
                     slug = re.sub(r'^\d+-', '', slug)
-                    # Remover sufijos comunes (ej: -en-vivo)
                     slug = slug.replace("-en-vivo", "")
-                    # Limpiar guiones
-                    clean_title = slug.replace("-", " ").strip().title()
+                    clean_slug_title = slug.replace("-", " ").strip().title()
                     
-                    # Si el texto extraido es pobre (ej: "0"), usar el slug limpio
-                    if not text or len(text) < 3 or text == "0":
-                        text = clean_title
+                    if not text or len(text) < 5 or text == "0":
+                        text = clean_slug_title
 
-                if href and "goatfutbol.online" in href and ("vs" in href.lower() or "vs" in str(text).lower() or "partido" in str(text).lower()):
+                if href and "goatfutbol.online" in href and ("vs" in href.lower() or "vs" in str(text).lower()):
                     if href not in unique_links:
                         unique_links.add(href)
-                        print(f"Analizando posible partido: {text} ({href})")
+                        print(f"Procesando partido: {text} ({href})")
                         
-                        # Guardar contexto de la pagina principal? No, abrimos nueva logica
-                        # O simplemente navegamos y volvemos? Navegar y volver es lento.
-                        
-                        # Mejor abrir una nueva pagina (tab) para cada partido para no perder la home
                         match_page = browser.new_page()
                         try:
                             match_page.goto(href, timeout=30000)
@@ -94,7 +94,7 @@ def scrape_match():
                             if found_url:
                                 print(f"  -> Player encontrado: {found_url}")
                                 matches_found.append({
-                                    "title": text if text else "Partido sin titulo",
+                                    "title": text,
                                     "url": found_url
                                 })
                             else:
