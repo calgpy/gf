@@ -11,8 +11,8 @@ class MatchRepository {
     private val OWNER = "calgpy" 
     private val REPO = "gf" 
 
-    fun getMatch(onResult: (Result<MatchData>) -> Unit) {
-        GitHubClient.service.getMatchData(OWNER, REPO).enqueue(object : Callback<MatchData> {
+    fun getMatch(token: String, onResult: (Result<MatchData>) -> Unit) {
+        GitHubClient.service.getMatchData(token = token, owner = OWNER, repo = REPO).enqueue(object : Callback<MatchData> {
             override fun onResponse(call: Call<MatchData>, response: Response<MatchData>) {
                 if (response.isSuccessful && response.body() != null) {
                     onResult(Result.success(response.body()!!))

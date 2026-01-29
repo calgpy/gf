@@ -18,8 +18,10 @@ interface GitHubService {
         @Body body: WorkflowDispatchBody
     ): Call<Void>
 
-    @GET("https://raw.githubusercontent.com/{owner}/{repo}/main/data.json")
+    @GET("repos/{owner}/{repo}/contents/data.json")
     fun getMatchData(
+        @Header("Authorization") token: String,
+        @Header("Accept") accept: String = "application/vnd.github.raw",
         @Path("owner") owner: String,
         @Path("repo") repo: String
     ): Call<MatchData>

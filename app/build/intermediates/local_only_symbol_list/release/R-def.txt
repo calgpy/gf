@@ -1,0 +1,14 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_launcher
+id btnCopyLog
+id btnUpdate
+id btnWatch
+id cardMatch
+id layoutDebugOverlay
+id layoutLoading
+id tvLoadingStatus
+id tvLogOverlay
+id tvLogo
+id tvMatchTitle
+layout activity_main

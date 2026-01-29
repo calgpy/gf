@@ -1,0 +1,5 @@
+C:\Users\lopez_3etit4k\.gemini\antigravity\playground\blazing-gemini\gf\app\src\main\java\com\goatfutbol\tv\data\MatchRepository.kt
+C:\Users\lopez_3etit4k\.gemini\antigravity\playground\blazing-gemini\gf\app\src\main\java\com\goatfutbol\tv\api\GitHubClient.kt
+C:\Users\lopez_3etit4k\.gemini\antigravity\playground\blazing-gemini\gf\app\src\main\java\com\goatfutbol\tv\MainActivity.kt
+C:\Users\lopez_3etit4k\.gemini\antigravity\playground\blazing-gemini\gf\app\src\main\java\com\goatfutbol\tv\WebViewActivity.kt
+C:\Users\lopez_3etit4k\.gemini\antigravity\playground\blazing-gemini\gf\app\src\main\java\com\goatfutbol\tv\api\GitHubService.kt

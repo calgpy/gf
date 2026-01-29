@@ -1,4 +1,4 @@
-package com.goatfutbol.tv
+depackage com.goatfutbol.tv
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -23,6 +23,8 @@ import com.goatfutbol.tv.data.MatchRepository
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import com.goatfutbol.tv.WebViewActivity
+import com.goatfutbol.tv.R
 
 class MainActivity : AppCompatActivity() {
 
@@ -127,7 +129,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadMatchData() {
-        repository.getMatch { result ->
+        repository.getMatch(GITHUB_TOKEN) { result ->
             result.onSuccess { match ->
                 tvMatchTitle.text = match.title
                 lastUrl = match.url
