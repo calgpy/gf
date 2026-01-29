@@ -1,7 +1,16 @@
 {
-  "title": "No hay partidos detectados hoy",
-  "url": "",
-  "date": "2026-01-29 01:15:16",
-  "error": "No matches found with valid players",
-  "matches": []
+  "title": "2 partidos encontrados",
+  "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html",
+  "date": "2026-01-28 22:25:12",
+  "error": null,
+  "matches": [
+    {
+      "title": "20:00 2 de Mayo vs Olimpia En vivo",
+      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
+    },
+    {
+      "title": "18:00 Libertad vs Ameliano",
+      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
+    }
+  ]
 }
