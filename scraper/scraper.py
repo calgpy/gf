@@ -22,65 +22,66 @@ def scrape_match():
             page.goto("https://www.goatfutbol.online/", timeout=60000)
             page.wait_for_load_state("networkidle")
 
-            # 2. Buscar el primer post que parezca un partido
-            # Buscamos enlaces que tengan formato de fecha o "vs"
+            # 2. Buscar todos los enlaces de partidos
             print("Buscando partidos...")
             
-            # Estrategia: Obtener el primer enlace dentro de la sección de entradas o noticias
-            # Ajustar selector según la estructura real. Basado en analisis previo:
-            # Los posts suelen estar en un contenedor main o article.
+            matches_found = []
             
-            # Intentamos tomar el primer artículo que no sea "Inicio" o "Agenda"
-            # Buscamos un link que contenga "vs" en su texto o URL
-            match_link = page.locator("a[href*='vs']").first
-            
-            if not match_link.count():
-                print("No se encontraron enlaces de partidos 'vs'.")
-                data["error"] = "No match links found"
-            else:
-                title = match_link.inner_text().strip()
-                url = match_link.get_attribute("href")
-                
-                print(f"Partido encontrado: {title}")
-                print(f"URL: {url}")
-                
-                data["title"] = title
-                
-                # 3. Entrar al partido
-                page.goto(url, timeout=60000)
-                page.wait_for_load_state("domcontentloaded")
-                
-                # 4. Buscar el iframe final
-                print("Buscando reproductor...")
-                
-                # Buscamos iframes cerca de "OPCION"
-                # A veces hay iframes anidados. 
-                # Simplificación: Buscar todos los iframes y ver cual es el del reproductor.
-                # En el analisis anterior vimos que era 'futbolparaguayotv.github.io'
-                
-                found_player = False
-                iframes = page.locator("iframe").all()
-                
-                for frame_loc in iframes:
-                    src = frame_loc.get_attribute("src")
-                    if src and "futbolparaguayotv" in src:
-                        data["url"] = src
-                        found_player = True
-                        break
-                
-                if not found_player:
-                    # Si no es ese dominio especifico, intentamos tomar el iframe que sigue a "OPCION 1"
-                    opcion_label = page.get_by_text("OPCION 1").first
-                    if opcion_label.count():
-                        # Buscar iframe cercano
-                        # Esto es tricky con selectores, a veces mejor agarrar todos los srcs
-                        pass
-                        
-                    # Fallback: Guardar el primer iframe que no sea de publicidad (ads)
-                    # O simplemente guardar la URL del post para que la App lo procese (pero el user quiere el reproductor)
-                    pass
+            # Buscamos todos los links que contengan "vs" o estructura de fecha
+            # Ajustamos el selector para ser mas abarcativo o especifico segun la pagina
+            # Tomamos todos los <a> que tengan href
+            candidates = page.locator("a[href*='html']").all()
 
-            browser.close()
+            unique_links = set()
+            
+            for link in candidates:
+                href = link.get_attribute("href")
+                text = link.inner_text().strip()
+                
+                if href and "goatfutbol.online" in href and ("vs" in href.lower() or "vs" in text.lower()):
+                    if href not in unique_links:
+                        unique_links.add(href)
+                        print(f"Analizando posible partido: {text} ({href})")
+                        
+                        # Guardar contexto de la pagina principal? No, abrimos nueva logica
+                        # O simplemente navegamos y volvemos? Navegar y volver es lento.
+                        
+                        # Mejor abrir una nueva pagina (tab) para cada partido para no perder la home
+                        match_page = browser.new_page()
+                        try:
+                            match_page.goto(href, timeout=30000)
+                            match_page.wait_for_load_state("domcontentloaded")
+                            
+                            # Buscar iframe correcto
+                            player_iframes = match_page.locator("iframe").all()
+                            found_url = ""
+                            
+                            for frame in player_iframes:
+                                src = frame.get_attribute("src")
+                                if src and src.startswith("https://futbolparaguayotv.github.io/futbolparaguayotv/"):
+                                    found_url = src
+                                    break
+                            
+                            if found_url:
+                                print(f"  -> Player encontrado: {found_url}")
+                                matches_found.append({
+                                    "title": text if text else "Partido sin titulo",
+                                    "url": found_url
+                                })
+                            else:
+                                print("  -> No se encontro player valido.")
+                                
+                        except Exception as e_match:
+                            print(f"  -> Error procesando partido: {e_match}")
+                        finally:
+                            match_page.close()
+
+            data["matches"] = matches_found
+            if matches_found:
+                data["title"] = f"{len(matches_found)} partidos encontrados"
+                data["url"] = matches_found[0]["url"] # Fallback para apps viejas
+            else:
+                data["error"] = "No matches found with valid players"
 
     except Exception as e:
         print(f"Error: {e}")

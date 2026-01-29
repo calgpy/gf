@@ -1,5 +1,8 @@
 package com.goatfutbol.tv
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -7,9 +10,13 @@ import android.os.Looper
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import com.goatfutbol.tv.api.GitHubClient
 import com.goatfutbol.tv.api.WorkflowDispatchBody
 import com.goatfutbol.tv.data.MatchRepository
@@ -20,7 +27,7 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity() {
 
     // CONFIGURACION (LLENAR ESTO)
-    private val GITHUB_TOKEN = "Bearer PON_TU_TOKEN_AQUI" 
+    private val GITHUB_TOKEN = "Bearer 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" 
     private val OWNER = "calgpy"
     private val REPO = "gf"
     private val WORKFLOW_ID = "scrape.yml"
@@ -32,9 +39,43 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLoadingStatus: TextView
     private lateinit var tvLogo: TextView
 
+    // Debug Overlay Views
+    private lateinit var layoutDebugOverlay: RelativeLayout
+    private lateinit var tvLogOverlay: TextView
+    private lateinit var btnCopyLog: Button
+
     private val repository = MatchRepository()
     private var clickCount = 0
     private var lastUrl = ""
+    
+    private val clickHandler = Handler(Looper.getMainLooper())
+    private val processClicksRunnable = Runnable { 
+        when (clickCount) {
+            2 -> {
+                // Toggle Overlay
+                if (layoutDebugOverlay.visibility == View.VISIBLE) {
+                    layoutDebugOverlay.visibility = View.GONE
+                    log("Overlay DEBUG Desactivado")
+                } else {
+                    layoutDebugOverlay.visibility = View.VISIBLE
+                    log("Overlay DEBUG Activado")
+                }
+            }
+            3 -> {
+                // Toggle Admin Mode
+                if (btnUpdate.visibility == View.VISIBLE) {
+                    btnUpdate.visibility = View.GONE
+                    log("Modo Admin Desactivado")
+                    Toast.makeText(this@MainActivity, "Modo Admin Desactivado", Toast.LENGTH_SHORT).show()
+                } else {
+                    btnUpdate.visibility = View.VISIBLE
+                    log("Modo Admin ACTIVADO")
+                    Toast.makeText(this@MainActivity, "Modo Admin Activado", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        clickCount = 0
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +87,13 @@ class MainActivity : AppCompatActivity() {
         layoutLoading = findViewById(R.id.layoutLoading)
         tvLoadingStatus = findViewById(R.id.tvLoadingStatus)
         tvLogo = findViewById(R.id.tvLogo)
+        
+        layoutDebugOverlay = findViewById(R.id.layoutDebugOverlay)
+        tvLogOverlay = findViewById(R.id.tvLogOverlay)
+        btnCopyLog = findViewById(R.id.btnCopyLog)
+
+        setupCrashHandler()
+        log("App Iniciada correctamente.")
 
         loadMatchData()
 
@@ -59,14 +107,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // SECRET TRIGGER (3 Clicks)
+        // SECRET TRIGGER (Debounced)
         tvLogo.setOnClickListener {
             clickCount++
-            if (clickCount >= 3) {
-                Toast.makeText(this, "Modo Admin Activado", Toast.LENGTH_SHORT).show()
-                btnUpdate.visibility = View.VISIBLE
-                clickCount = 0
-            }
+            log("Click buffer: $clickCount")
+            
+            // Reset timer and wait for more clicks
+            clickHandler.removeCallbacks(processClicksRunnable)
+            clickHandler.postDelayed(processClicksRunnable, 500) // 500ms delay to commit
+        }
+        
+        btnCopyLog.setOnClickListener {
+            copyLogToClipboard()
         }
 
         btnUpdate.setOnClickListener {
@@ -75,12 +127,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadMatchData() {
-        repository.getMatch { match ->
-            if (match != null) {
+        repository.getMatch { result ->
+            result.onSuccess { match ->
                 tvMatchTitle.text = match.title
                 lastUrl = match.url
-            } else {
+                log("Datos cargados: ${match.title}")
+            }.onFailure { e ->
                 tvMatchTitle.text = "Error cargando datos"
+                log("Error Repo: ${e.message}")
             }
         }
     }
@@ -100,16 +154,20 @@ class MainActivity : AppCompatActivity() {
         ).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
+                    log("Workflow disparado EXITOSAMENTE.")
                     // Workflow iniciado. Ahora simulamos polling.
                     startPolling()
                 } else {
                     layoutLoading.visibility = View.GONE
-                    Toast.makeText(this@MainActivity, "Error al iniciar: ${response.code()}", Toast.LENGTH_LONG).show()
+                    val errorMsg = "Error al iniciar: ${response.code()} ${response.message()}"
+                    log(errorMsg)
+                    Toast.makeText(this@MainActivity, errorMsg, Toast.LENGTH_LONG).show()
                 }
             }
 
             override fun onFailure(call: Call<Void>, t: Throwable) {
                 layoutLoading.visibility = View.GONE
+                log("Fallo de RED: ${t.message}")
                 Toast.makeText(this@MainActivity, "Fallo de red", Toast.LENGTH_SHORT).show()
             }
         })
@@ -132,5 +190,32 @@ class MainActivity : AppCompatActivity() {
     
     private fun updateLoadingStatus(text: String, percent: Int) {
         tvLoadingStatus.text = "$text ($percent%)"
+        log("Status Update: $text")
+    }
+
+    private fun log(message: String) {
+        runOnUiThread {
+            val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            val newLog = "[$timestamp] $message\n${tvLogOverlay.text}"
+            tvLogOverlay.text = newLog
+        }
+    }
+
+    private fun copyLogToClipboard() {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("GoatFutbol Log", tvLogOverlay.text)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(this, "Log copiado al portapapeles", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupCrashHandler() {
+        val oldHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            log("CRASH FATAL: ${throwable.message}")
+            throwable.printStackTrace()
+            // Give UI a moment to update before crashing (best effort)
+            try { Thread.sleep(2000) } catch (e: InterruptedException) {}
+            oldHandler?.uncaughtException(thread, throwable)
+        }
     }
 }

@@ -115,4 +115,43 @@
             
     </LinearLayout>
 
+    <RelativeLayout
+        android:id="@+id/layoutDebugOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:background="#DD000000"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:elevation="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/btnCopyLog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="COPIAR LOG"
+            android:backgroundTint="#2196F3"
+            android:textColor="#FFFFFF"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="8dp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/btnCopyLog">
+
+            <TextView
+                android:id="@+id/tvLogOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Debug Log Started..."
+                android:textColor="#FFFFFF"
+                android:fontFamily="monospace"
+                android:textSize="12sp" />
+        </ScrollView>
+    </RelativeLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

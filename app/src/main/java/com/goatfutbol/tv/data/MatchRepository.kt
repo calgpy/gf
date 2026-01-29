@@ -11,18 +11,18 @@ class MatchRepository {
     private val OWNER = "calgpy" 
     private val REPO = "gf" 
 
-    fun getMatch(onResult: (MatchData?) -> Unit) {
+    fun getMatch(onResult: (Result<MatchData>) -> Unit) {
         GitHubClient.service.getMatchData(OWNER, REPO).enqueue(object : Callback<MatchData> {
             override fun onResponse(call: Call<MatchData>, response: Response<MatchData>) {
-                if (response.isSuccessful) {
-                    onResult(response.body())
+                if (response.isSuccessful && response.body() != null) {
+                    onResult(Result.success(response.body()!!))
                 } else {
-                    onResult(null)
+                    onResult(Result.failure(Exception("HTTP Error: ${response.code()} ${response.message()}")))
                 }
             }
 
             override fun onFailure(call: Call<MatchData>, t: Throwable) {
-                onResult(null)
+                onResult(Result.failure(t))
             }
         })
     }
