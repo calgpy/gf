@@ -38,7 +38,20 @@ def scrape_match():
                 href = link.get_attribute("href")
                 text = link.inner_text().strip()
                 
-                if href and "goatfutbol.online" in href and ("vs" in href.lower() or "vs" in text.lower()):
+                # Intentar sacar titulo de la imagen si no hay texto
+                if not text:
+                    img = link.locator("img").first
+                    if img.count() > 0:
+                        text = img.get_attribute("alt")
+                
+                # Ultimo recurso: sacar del URL
+                if not text and href:
+                    # Ejemplo: .../2024/01/cerro-porteno-vs-trinidense.html
+                    parts = href.split("/")
+                    last_part = parts[-1].replace(".html", "").replace(".php", "")
+                    text = last_part.replace("-", " ").title()
+
+                if href and "goatfutbol.online" in href and ("vs" in href.lower() or "vs" in str(text).lower() or "partido" in str(text).lower()):
                     if href not in unique_links:
                         unique_links.add(href)
                         print(f"Analizando posible partido: {text} ({href})")
