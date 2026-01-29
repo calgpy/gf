@@ -1,72 +1,7 @@
 {
-  "title": "16 partidos encontrados",
-  "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html",
-  "date": "2026-01-29 00:44:53",
-  "error": null,
-  "matches": [
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos2.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "Partido sin titulo",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    },
-    {
-      "title": "0",
-      "url": "https://futbolparaguayotv.github.io/futbolparaguayotv/3ventos.html"
-    }
-  ]
+  "title": "No hay partidos detectados hoy",
+  "url": "",
+  "date": "2026-01-29 01:04:09",
+  "error": "No matches found with valid players",
+  "matches": []
 }
