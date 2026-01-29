@@ -1,14 +1,17 @@
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from playwright.sync_api import sync_playwright
+
+# Timezone de Paraguay (UTC-3)
+PY_TZ = timezone(timedelta(hours=-3))
 
 def scrape_match():
     data = {
         "title": "No hay partidos detectados hoy",
         "url": "",
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "date": datetime.now(PY_TZ).strftime("%Y-%m-%d %H:%M:%S"),
         "error": None
     }
 
@@ -34,9 +37,10 @@ def scrape_match():
                 9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
             }
             
-            now = datetime.now()
+            # Usar timezone de Paraguay para fecha correcta
+            now = datetime.now(PY_TZ)
             today_str = f"{meses[now.month]} {now.day}, {now.year}"
-            print(f"Filtrando por fecha: {today_str}")
+            print(f"Filtrando por fecha (Paraguay): {today_str}")
             
             # Buscamos los contenedores de cada post
             posts = page.locator("div.post.hentry").all()
